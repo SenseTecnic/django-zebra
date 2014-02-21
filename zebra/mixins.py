@@ -75,6 +75,16 @@ class StripeCustomerMixin(object):
             self.stripe_customer_id = c.id
             self.save()
 
+        ######################################################
+        # Backwards compatibility fix for Stripe and Zebra
+        # Fills in the missing "active_card" field
+        if not hasattr(c, 'active_card'):
+            for card in c.cards.data:
+                if card.id == c.default_card:
+                    c.active_card = card # This is the expanded card dictionary
+        # end of compatibility fix
+        ######################################################
+
         return c
     stripe_customer = property(_get_stripe_customer)
 
@@ -92,6 +102,18 @@ class StripeSubscriptionMixin(object):
         customer = _get_attr_value(self, 'stripe_customer')
         if hasattr(customer, 'subscription'):
             subscription = customer.subscription
+
+        ######################################################
+        # Backwards compatibility fix for Stripe and Zebra
+        # Fills in the missing "subscription" field
+        elif (hasattr(customer, 'subscriptions') and 
+                len(self.customer.stripe_customer.subscriptions.data) == 1 ):    
+            # We are assuming the customer only has one subscription
+            subscription = customer.subscriptions.data[0]
+        
+        # end of compatibility fix
+        ######################################################
+
         return subscription
     stripe_subscription = property(_get_stripe_subscription)
 
