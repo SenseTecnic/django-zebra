@@ -79,9 +79,12 @@ class StripeCustomerMixin(object):
         # Backwards compatibility fix for Stripe and Zebra
         # Fills in the missing "active_card" field
         if not hasattr(c, 'active_card'):
-            for card in c.cards.data:
-                if card.id == c.default_card:
-                    c.active_card = card # This is the expanded card dictionary
+            if len(c.cards.data) > 0:
+                for card in c.cards.data:
+                    if card.id == c.default_card:
+                        c.active_card = card # This is the expanded card dictionary
+            else: # User don't have a card attached to their account
+                c.active_card = None
         # end of compatibility fix
         ######################################################
 
@@ -107,7 +110,7 @@ class StripeSubscriptionMixin(object):
         # Backwards compatibility fix for Stripe and Zebra
         # Fills in the missing "subscription" field
         elif (hasattr(customer, 'subscriptions') and 
-                len(self.customer.stripe_customer.subscriptions.data) == 1 ):    
+                len(self.customer.stripe_customer.subscriptions.data) > 0 ):    
             # We are assuming the customer only has one subscription
             subscription = customer.subscriptions.data[0]
         
