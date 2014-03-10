@@ -75,19 +75,6 @@ class StripeCustomerMixin(object):
             self.stripe_customer_id = c.id
             self.save()
 
-        ######################################################
-        # Backwards compatibility fix for Stripe and Zebra
-        # Fills in the missing "active_card" field
-        if not hasattr(c, 'active_card'):
-            if len(c.cards.data) > 0:
-                for card in c.cards.data:
-                    if card.id == c.default_card:
-                        c.active_card = card # This is the expanded card dictionary
-            else: # User don't have a card attached to their account
-                c.active_card = None
-        # end of compatibility fix
-        ######################################################
-
         return c
     stripe_customer = property(_get_stripe_customer)
 
